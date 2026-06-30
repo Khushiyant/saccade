@@ -3,7 +3,7 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "saccade"
+name = "saccadic"
 version = "0.1.0"
 description = "Efficient on-edge V-JEPA 2.x video encoder with a streaming/causal R&D track for temporal video understanding."
 readme = "README.md"
@@ -38,8 +38,8 @@ viz = ["matplotlib>=3.8", "seaborn>=0.13"]
 dev = ["pytest>=8.0", "matplotlib>=3.8", "seaborn>=0.13"]
 
 [project.urls]
-Homepage = "https://github.com/saccade/saccade"
-Documentation = "https://github.com/saccade/saccade/tree/main/docs"
+Homepage = "https://github.com/Khushiyant/saccade"
+Repository = "https://github.com/Khushiyant/saccade"
 
 # Blackwell (sm_120) needs the cu128 torch wheels; uv pulls torch from this index.
 [[tool.uv.index]]
@@ -67,3 +67,16 @@ markers = [
     "gpu: requires a CUDA device",
     "network: requires network access to fetch checkpoints",
 ]
+
+# Release automation: version is derived from Conventional Commits since the last tag.
+# feat -> minor, fix/perf -> patch, "BREAKING CHANGE:" -> minor while 0.x (major after 1.0).
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+build_command = "python -m pip install build && python -m build"
+tag_format = "v{version}"
+commit_message = "chore(release): v{version} [skip ci]"
+allow_zero_version = true
+major_on_zero = false
+
+[tool.semantic_release.branches.main]
+match = "main"

@@ -2,6 +2,12 @@
 
 <img width="2752" height="1536" alt="Gemini_Generated_Image_jtp6uvjtp6uvjtp6" src="https://github.com/user-attachments/assets/b6ec5cec-46bf-4ef6-a3a0-a6ef7d37ecc9" />
 
+<p align="center">
+<a href="https://pypi.org/project/saccadic/"><img src="https://img.shields.io/pypi/v/saccadic" alt="PyPI"></a>
+<a href="https://pypi.org/project/saccadic/"><img src="https://img.shields.io/pypi/pyversions/saccadic" alt="Python versions"></a>
+<a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT"></a>
+</p>
+
 Most of a video is redundant (a hallway camera sees nearly the same frame thousands of times),
 yet a video model normally pays full price for every frame. That makes running V-JEPA 2 live on
 edge hardware (cameras, robots, on-device apps) expensive.
@@ -50,19 +56,35 @@ a correctness check and an upper bound on edge performance.
 
 ## Install
 
-Requires Python 3.10+ and a CUDA GPU. Uses [uv](https://docs.astral.sh/uv/); torch comes from the
-cu128 index (Blackwell/sm_120), configured in `pyproject.toml`:
+Requires Python 3.10+ and a CUDA GPU.
+
+With [uv](https://docs.astral.sh/uv/) (recommended; pulls the cu128 torch build for
+Blackwell/sm_120 automatically, configured in `pyproject.toml`):
 
 ```bash
 uv sync                # creates .venv and installs deps (incl. cu128 torch)
 uv sync --extra dev    # add test + figure tooling (pytest, matplotlib, seaborn)
 ```
 
-On Jetson, install the JetPack-provided `torch`/`decord`/`tensorrt` wheels instead.
+With pip (the PyPI name is `saccadic`; it imports as `saccade`):
 
-## Quickstart
+```bash
+pip install saccadic                                    # latest release from PyPI
+pip install git+https://github.com/Khushiyant/saccade   # bleeding edge from main
+# or, from a clone, for development:
+pip install -e .
+```
 
-Encode a clip:
+On recent GPUs (Blackwell/sm_120) install the matching torch first, so pip does not pull an
+incompatible build: `pip install torch --index-url https://download.pytorch.org/whl/cu128`.
+On Jetson, use the JetPack-provided `torch`/`decord`/`tensorrt` wheels.
+
+## Usage
+
+Saccade is a library: it turns video into embeddings you feed to your own head (a classifier,
+retrieval index, anomaly score). Pick the mode that matches your input.
+
+One-shot, when you have a clip and want its embedding:
 
 ```python
 import torch
@@ -71,22 +93,39 @@ from saccade import load_encoder, ModelConfig
 enc = load_encoder(ModelConfig(checkpoint="vitl", frames=16, resolution=256,
                                device="cuda", dtype="float16"))
 clip = torch.rand(1, 16, 3, 256, 256, device="cuda", dtype=torch.float16)  # [B,T,C,H,W]
-emb = enc.embed(clip)        # [1, 1024]
+emb = enc.embed(clip)        # [1, 1024] -> feed to your task head
 ```
 
-Surprise-gated streaming (encode only when the scene changes):
+Surprise-gated streaming, when you have a live feed and want to skip redundant clips (the
+efficiency win: ~84% of clips skipped on real footage):
 
 ```python
 from saccade import SurpriseGatedEncoder
 
 gate = SurpriseGatedEncoder(enc, tau=0.015)   # tau is the compute/fidelity knob
 gate.reset()
-for clip in clips:                            # clip: [1, T, 3, H, W]
-    emb, info = gate.step(clip)               # info["encoded"] == False -> reused last latent
+for clip in stream:                           # each clip: [1, T, 3, H, W]
+    emb, info = gate.step(clip)
+    if info["encoded"]:                       # False -> scene unchanged, last emb reused
+        my_head(emb)                          # only run downstream work when it is new
 ```
 
-For exact causal streaming with a KV-cache, use `apply_causal_lora(enc, StreamingConfig(...))`
-then `StreamingEncoder`.
+Exact causal streaming, when you want a per-frame running embedding backed by a KV-cache:
+
+```python
+from saccade import StreamingEncoder, StreamingConfig
+
+stream = StreamingEncoder(enc, StreamingConfig())
+stream.reset()
+for frame in frames:                          # each frame: [3, H, W]
+    emb = stream.step(frame)                  # emits a 1024-d embedding once a tubelet completes
+```
+
+To finetune the causal adapter on your own video, `apply_causal_lora(enc, StreamingConfig())`
+converts the encoder in place and returns the trainable LoRA parameters.
+
+In every mode `emb` is a 1024-d vector; attach your own linear probe, retrieval, or threshold on
+top. Saccade gives you the cheap live representation, the task head is yours.
 
 ## Reproduce
 

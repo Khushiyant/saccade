@@ -12,6 +12,8 @@ __pycache__/
 .venv/
 venv/
 *.egg-info/
+build/
+dist/
 # ignore docs/ except the result figures (used in the README)
 docs/*
 !docs/figures/

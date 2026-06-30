@@ -1,0 +1,53 @@
+name: release
+
+on:
+  push:
+    branches: [main]
+
+# One release at a time; never cancel a release that is mid-publish.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    # Skip the run created by the release commit itself.
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    environment:
+      name: pypi
+      url: https://pypi.org/project/saccadic/
+    permissions:
+      contents: write   # push the version-bump commit + tag, create the GitHub release
+      id-token: write   # PyPI Trusted Publishing (OIDC), no API token needed
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Decide the next version from Conventional Commits, bump pyproject.toml,
+      # update CHANGELOG.md, commit, tag, build the wheel/sdist, create the GitHub release.
+      - name: Python Semantic Release
+        id: release
+        uses: python-semantic-release/python-semantic-release@v9
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to PyPI
+        if: steps.release.outputs.released == 'true'
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+      - name: Attach distributions to the GitHub release
+        if: steps.release.outputs.released == 'true'
+        uses: python-semantic-release/publish-action@v9
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.release.outputs.tag }}
