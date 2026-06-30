@@ -42,6 +42,7 @@ Homepage = "https://github.com/Khushiyant/saccade"
 Repository = "https://github.com/Khushiyant/saccade"
 
 # Blackwell (sm_120) needs the cu128 torch wheels; uv pulls torch from this index.
+
 [[tool.uv.index]]
 name = "pytorch-cu128"
 url = "https://download.pytorch.org/whl/cu128"
