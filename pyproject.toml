@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "saccade"
+version = "0.1.0"
+description = "Efficient on-edge V-JEPA 2.x video encoder with a streaming/causal R&D track for temporal video understanding."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Khushiyant" }]
+keywords = ["v-jepa", "video", "encoder", "edge", "jetson", "quantization", "streaming", "distillation"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Intended Audience :: Science/Research",
+]
+dependencies = [
+    "torch>=2.2",
+    "transformers>=4.44",
+    "numpy>=1.24",
+    "pyyaml>=6.0",
+    "decord>=0.6.0",
+    "fvcore>=0.1.5",
+    "thop>=0.1.1",
+    "torchao>=0.5.0",
+    "onnx>=1.16",
+    "onnxruntime>=1.18",
+]
+
+[project.optional-dependencies]
+trt = ["tensorrt"]                       # from JetPack / NVIDIA wheels on-device, not PyPI
+bnb = ["bitsandbytes>=0.43.0"]
+viz = ["matplotlib>=3.8", "seaborn>=0.13"]
+dev = ["pytest>=8.0", "matplotlib>=3.8", "seaborn>=0.13"]
+
+[project.urls]
+Homepage = "https://github.com/saccade/saccade"
+Documentation = "https://github.com/saccade/saccade/tree/main/docs"
+
+# Blackwell (sm_120) needs the cu128 torch wheels; uv pulls torch from this index.
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
+
+[tool.setuptools]
+package-dir = { "saccade" = "src/saccade" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["saccade*"]
+
+[tool.setuptools.package-data]
+saccade = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+markers = [
+    "gpu: requires a CUDA device",
+    "network: requires network access to fetch checkpoints",
+]

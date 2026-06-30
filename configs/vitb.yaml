@@ -1,0 +1,34 @@
+# Benchmark config - ViT-B size-down fallback for constrained targets (D2).
+# Matches vjepa_edge.config.BenchmarkConfig; load with config.load_config().
+model:
+  checkpoint: vitb
+  frames: 16
+  resolution: 256
+  device: cuda
+  dtype: float16
+  freeze: true
+quant:
+  scheme: none
+  method: ptq
+  targets:
+    - attn
+    - mlp
+  exclude:
+    - norm
+    - act
+    - embed
+  calib_samples: 256
+  per_channel: true
+tokens:
+  method: none
+  r: 0
+  apply_layers: []
+  temporal_static_merge: false
+  threshold: 0.9
+batch: 1
+warmup: 10
+iters: 50
+device: cuda
+precision: fp16
+out_path: benchmarks/results/vitb.json
+tag: vitb-fp16-baseline

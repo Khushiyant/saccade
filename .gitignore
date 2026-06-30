@@ -1,0 +1,17 @@
+benchmarks/results/*.json
+.DS_Store
+*.engine
+exports/
+*.onnx
+*.pt
+*.pth
+*.pyc
+__pycache__/
+.pytest_cache/
+*.safetensors
+.venv/
+venv/
+*.egg-info/
+# ignore docs/ except the result figures (used in the README)
+docs/*
+!docs/figures/

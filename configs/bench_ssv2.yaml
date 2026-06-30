@@ -1,0 +1,38 @@
+# Benchmark config - Something-Something v2 (SSv2) anchor benchmark (D1).
+# ViT-L INT8 PTQ with ToMe token merging, the candidate edge-deployment point.
+# Matches vjepa_edge.config.BenchmarkConfig; load with config.load_config().
+model:
+  checkpoint: vitl
+  frames: 16
+  resolution: 256
+  device: cuda
+  dtype: float16
+  freeze: true
+quant:
+  scheme: int8
+  method: ptq
+  targets:
+    - attn
+    - mlp
+  exclude:
+    - norm
+    - act
+    - embed
+  calib_samples: 256
+  per_channel: true
+tokens:
+  method: tome
+  r: 8
+  apply_layers:
+    - 6
+    - 12
+    - 18
+  temporal_static_merge: false
+  threshold: 0.9
+batch: 1
+warmup: 10
+iters: 50
+device: cuda
+precision: int8
+out_path: benchmarks/results/bench_ssv2.json
+tag: ssv2-vitl-int8-tome
