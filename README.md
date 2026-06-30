@@ -1,5 +1,7 @@
 # Saccade
 
+<img width="2752" height="1536" alt="Gemini_Generated_Image_jtp6uvjtp6uvjtp6" src="https://github.com/user-attachments/assets/b6ec5cec-46bf-4ef6-a3a0-a6ef7d37ecc9" />
+
 Most of a video is redundant (a hallway camera sees nearly the same frame thousands of times),
 yet a video model normally pays full price for every frame. That makes running V-JEPA 2 live on
 edge hardware (cameras, robots, on-device apps) expensive.
