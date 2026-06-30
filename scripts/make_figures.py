@@ -85,51 +85,47 @@ def fig_surprise_gate():
     save(fig, "fig_surprise_gate")
 
 
-def fig_token_reduction():
+def fig_efficiency():
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4.6))
+
     pts = [("full", 1.00, 1.000), ("ToMe r=128", 1.32, 0.963),
            ("ToMe r=256", 1.82, 0.883), ("PruneVid", 2.28, 0.753)]
-    fig, ax = plt.subplots(figsize=(7.2, 5.0))
-    ax.plot([p[1] for p in pts], [p[2] for p in pts], ls="-", marker="o", color=K,
-            lw=1.7, ms=7, markerfacecolor="white", markeredgecolor=K, markeredgewidth=1.2)
+    ax1.plot([p[1] for p in pts], [p[2] for p in pts], ls="-", marker="o", color=K,
+             lw=1.7, ms=7, markerfacecolor="white", markeredgecolor=K, markeredgewidth=1.2)
     for name, xx, yy in pts:
-        ax.annotate(name, (xx, yy), textcoords="offset points", xytext=(9, 8),
-                    color=K, fontsize=10)
-    ax.scatter([4.53], [1.0], marker="*", s=360, facecolor="white", edgecolor=K,
-               linewidth=1.3, zorder=5)
-    ax.annotate("fused attention\n(free, lossless)", (4.53, 1.0),
-                textcoords="offset points", xytext=(-18, -42), color=D, fontsize=10)
-    _style(ax, "Efficiency-fidelity trade-off (ViT-L)")
-    ax.set_xlabel("speedup vs fp16 baseline")
-    ax.set_ylabel("fidelity (cosine vs full)")
-    ax.set_xlim(0.7, 5.1)
-    ax.set_ylim(0.70, 1.03)
-    save(fig, "fig_token_reduction")
+        ax1.annotate(name, (xx, yy), textcoords="offset points", xytext=(9, 8),
+                     color=K, fontsize=9.5)
+    ax1.scatter([4.53], [1.0], marker="*", s=320, facecolor="white", edgecolor=K,
+                linewidth=1.3, zorder=5)
+    ax1.annotate("fused attention\n(free, lossless)", (4.53, 1.0),
+                 textcoords="offset points", xytext=(-16, -40), color=D, fontsize=9.5)
+    _style(ax1, "(a) efficiency-fidelity trade-off")
+    ax1.set_xlabel("speedup vs fp16 baseline")
+    ax1.set_ylabel("fidelity (cosine vs full)")
+    ax1.set_xlim(0.7, 5.1)
+    ax1.set_ylim(0.70, 1.03)
 
+    ax2.plot([1, 16], [7.8, 62.8], ls="-", marker="o", color=K, lw=1.7, ms=8,
+             markerfacecolor="white", markeredgecolor=K, markeredgewidth=1.2,
+             label="streaming step (per frame)")
+    ax2.scatter([8], [22.8], marker="D", facecolor="white", edgecolor=D, s=80,
+                linewidth=1.4, zorder=4)
+    ax2.annotate("mean 22.8 ms", (8, 22.8), textcoords="offset points", xytext=(8, 8),
+                 color=D, fontsize=9.5)
+    ax2.axhline(188.8, color=K, lw=1.5, ls=(0, (6, 3)), label="full clip re-encode (188.8 ms)")
+    ax2.annotate("8.3x cheaper per update", (1.2, 112), color=K, fontsize=10)
+    _style(ax2, "(b) streaming: per-frame update vs full re-encode")
+    ax2.set_xlabel("frames in KV-cache (history length)")
+    ax2.set_ylabel("cost per embedding update (ms)")
+    ax2.set_xlim(0, 17)
+    ax2.set_ylim(0, 210)
+    ax2.legend(loc="center right", fontsize=9)
 
-def fig_streaming():
-    fig, ax = plt.subplots(figsize=(7.4, 5.0))
-    ctx, lat = [1, 16], [7.8, 62.8]
-    ax.plot(ctx, lat, ls="-", marker="o", color=K, lw=1.7, ms=8,
-            markerfacecolor="white", markeredgecolor=K, markeredgewidth=1.2,
-            label="streaming step (per frame)")
-    ax.scatter([8], [22.8], marker="D", facecolor="white", edgecolor=D, s=80,
-               linewidth=1.4, zorder=4)
-    ax.annotate("mean 22.8 ms", (8, 22.8), textcoords="offset points", xytext=(8, 8),
-                color=D, fontsize=9.5)
-    ax.axhline(188.8, color=K, lw=1.5, ls=(0, (6, 3)),
-               label="full clip re-encode (188.8 ms)")
-    ax.annotate("8.3x cheaper per update", (1.2, 112), color=K, fontsize=10.5)
-    _style(ax, "Streaming: per-frame update vs full re-encode")
-    ax.set_xlabel("frames in KV-cache (history length)")
-    ax.set_ylabel("cost per embedding update (ms)")
-    ax.set_xlim(0, 17)
-    ax.set_ylim(0, 210)
-    ax.legend(loc="center right")
-    save(fig, "fig_streaming")
+    fig.suptitle("Efficiency and streaming (ViT-L, RTX 5070 Ti)", color=K, fontsize=13, y=1.02)
+    save(fig, "fig_efficiency")
 
 
 if __name__ == "__main__":
     fig_surprise_gate()
-    fig_token_reduction()
-    fig_streaming()
+    fig_efficiency()
     print("done ->", OUT)

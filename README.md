@@ -35,10 +35,7 @@ to a smaller ViT-S student, ONNX export, and an async decode-and-infer pipeline.
 Measured on an RTX 5070 Ti, fp16, batch 1. A single GPU, not the Jetson target, so read these as
 a correctness check and an upper bound on edge performance.
 
-<p align="center">
-  <img src="docs/figures/fig_token_reduction.png" width="320" alt="Efficiency-fidelity trade-off">
-  <img src="docs/figures/fig_streaming.png" width="320" alt="Streaming per-frame update vs full re-encode">
-</p>
+<p align="center"><img src="docs/figures/fig_efficiency.png" width="640" alt="Efficiency and streaming"></p>
 
 | What | Result |
 |------|--------|
